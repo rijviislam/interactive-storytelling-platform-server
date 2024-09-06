@@ -82,6 +82,32 @@ async function run() {
         res.status(500).send({ message: "Failed to fetch data" });
       }
     });
+    // GET SINGLE STORY //
+    app.get("/all-story/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await postStoryCollection.findOne(query);
+        res.send(result);
+      });
+    //   UPDATE STORY //
+    app.put("/all-story/:id", async (req, res) => {
+        const id = req.params.id;
+        const updatedId = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updateBlog = req.body;
+        const updateMyBlog = {
+          $set: {
+            title: updateBlog.title,
+            storyDescription: updateBlog.storyDescription,
+          },
+        };
+        const result = await postStoryCollection.updateOne(
+          updatedId,
+          updateMyBlog,
+          options
+        );
+        res.send(result);
+      });
     // GET STORY DETAILS //
     app.get("/story-details/:id", async (req, res) => {
       try {
