@@ -72,6 +72,13 @@ async function run() {
         res.status(500).send({ message: "Failed to fetch data" });
       }
     });
+      // GET SINGLE PATH //
+      app.get("/path/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await pathCollection.findOne(query);
+        res.send(result);
+      });
     // GET STORY //
     app.get("/all-story", async (req, res) => {
       try {
