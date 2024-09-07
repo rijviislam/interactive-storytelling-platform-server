@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const { v4: uuidv4 } = require('uuid');
 require("dotenv").config();
 const port = process.env.PORT || 5001;
 
@@ -51,18 +52,35 @@ async function run() {
         res.status(500).send({ message: "Failed to Post data" });
       }
     });
-    // ADD PATH //
     app.post("/add-path", async (req, res) => {
-      try {
-        const path = req.body;
-        const result = await pathCollection.insertOne(path);
-        res.send(result);
-      } catch (error) {
-        console.error("Error Posting data:", error);
-        res.status(500).send({ message: "Failed to Post data" });
-      }
-    });
-    // GET PATH // 
+        const { title, initialContent, options, postedTime, email } = req.body;
+        const parentId = options.length > 0 ? uuidv4() : ""; 
+        const optionTitles = options.map(option => option.title);
+      
+        try {
+          const result = await pathCollection.insertOne({
+            title,
+            initialContent,
+            options: options.map(option => ({ ...option, parentId })),
+            postedTime,
+            parentId,
+            email,
+          });
+      
+          if (parentId) {
+            await pathCollection.updateMany(
+              { title: { $in: optionTitles } },
+              { $set: { parentId } }
+            );
+          }
+      
+          res.json({ success: true, insertedId: result.insertedId });
+        } catch (error) {
+          res.status(500).json({ success: false, error: error.message });
+        }
+      });
+      
+    // GET PATH //
     app.get("/get-path", async (req, res) => {
       try {
         const result = await pathCollection.find().toArray();
@@ -73,17 +91,81 @@ async function run() {
       }
     });
     // GET PATH BY EMAIL // //NOT USED
-    app.get("/get-path/:email", async (req, res) => {
-        const myEmail = req.params.email.trim();
-        try {
-          const query = { email: myEmail };
-          const result = await pathCollection.find(query).toArray();
-          res.send(result);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          res.status(500).send({ message: "Failed to fetch data" });
+    // app.get("/get-path/:email", async (req, res) => {
+    //     const myEmail = req.params.email.trim();
+    //     try {
+    //       const query = { email: myEmail };
+    //       const result = await pathCollection.find(query).toArray();
+    //       res.send(result);
+    //     } catch (error) {
+    //       console.error("Error fetching data:", error);
+    //       res.status(500).send({ message: "Failed to fetch data" });
+    //     }
+    //   });
+
+    app.put("/update-path/:id", async (req, res) => {
+      const { id } = req.params;
+      const { parentId } = req.body;
+
+      try {
+        const result = await pathCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { parentId } }
+        );
+
+        if (result.modifiedCount > 0) {
+          res.json({
+            success: true,
+            message: "Parent ID updated successfully",
+          });
+        } else {
+          res.json({ success: false, message: "Failed to update Parent ID" });
         }
-      });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.put("/update-allpath", async (req, res) => {
+      const { titles, parentId } = req.body; 
+
+      try {
+        const result = await pathCollection.updateMany(
+          { title: { $in: titles } },
+          { $set: { parentId } }
+        );
+
+        if (result.modifiedCount > 0) {
+          res.json({
+            success: true,
+            message: "All matching paths updated successfully",
+          });
+        } else {
+          res.json({
+            success: false,
+            message: "No matching paths found or failed to update",
+          });
+        }
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.post("/check-options", async (req, res) => {
+      const { titles } = req.body;
+
+      try {
+        const existingPaths = await pathCollection
+          .find({ title: { $in: titles }, parentId: { $ne: "" } })
+          .toArray();
+
+        const existingTitles = existingPaths.map((path) => path.title);
+
+        res.json({ success: true, existingTitles });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
 
     // GET SINGLE PATH //
     app.get("/path/:id", async (req, res) => {
