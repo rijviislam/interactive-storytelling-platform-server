@@ -62,7 +62,7 @@ async function run() {
         res.status(500).send({ message: "Failed to Post data" });
       }
     });
-    // GET PATH //
+    // GET PATH // 
     app.get("/get-path", async (req, res) => {
       try {
         const result = await pathCollection.find().toArray();
@@ -72,12 +72,30 @@ async function run() {
         res.status(500).send({ message: "Failed to fetch data" });
       }
     });
+    // GET PATH BY EMAIL // //NOT USED
+    app.get("/get-path/:email", async (req, res) => {
+        const myEmail = req.params.email.trim();
+        try {
+          const query = { email: myEmail };
+          const result = await pathCollection.find(query).toArray();
+          res.send(result);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          res.status(500).send({ message: "Failed to fetch data" });
+        }
+      });
+
     // GET SINGLE PATH //
     app.get("/path/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await pathCollection.findOne(query);
-      res.send(result);
+      try {
+        const query = { _id: new ObjectId(id) };
+        const result = await pathCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ message: "Failed to fetch data" });
+      }
     });
     // GET STORY //
     app.get("/all-story", async (req, res) => {
@@ -92,9 +110,14 @@ async function run() {
     // GET SINGLE STORY //
     app.get("/all-story/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await postStoryCollection.findOne(query);
-      res.send(result);
+      try {
+        const query = { _id: new ObjectId(id) };
+        const result = await postStoryCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ message: "Failed to fetch data" });
+      }
     });
     //   UPDATE STORY //
     app.put("/all-story/:id", async (req, res) => {
@@ -108,12 +131,17 @@ async function run() {
           storyDescription: updateBlog.storyDescription,
         },
       };
-      const result = await postStoryCollection.updateOne(
-        updatedId,
-        updateMyBlog,
-        options
-      );
-      res.send(result);
+      try {
+        const result = await postStoryCollection.updateOne(
+          updatedId,
+          updateMyBlog,
+          options
+        );
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ message: "Failed to fetch data" });
+      }
     });
     //   UPDATE PATH //
     app.put("/path/:id", async (req, res) => {
@@ -121,7 +149,6 @@ async function run() {
       const updatedId = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateBlog = req.body;
-      console.log(updateBlog);
       const updateMyBlog = {
         $set: {
           title: updateBlog.title,
@@ -158,6 +185,18 @@ async function run() {
       try {
         const query = { email: myEmail };
         const result = await postStoryCollection.find(query).toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ message: "Failed to fetch data" });
+      }
+    });
+    // DELETE PATH //
+    app.delete("/path/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      try {
+        const result = await pathCollection.deleteOne(query);
         res.send(result);
       } catch (error) {
         console.error("Error fetching data:", error);
