@@ -72,13 +72,13 @@ async function run() {
         res.status(500).send({ message: "Failed to fetch data" });
       }
     });
-      // GET SINGLE PATH //
-      app.get("/path/:id", async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) };
-        const result = await pathCollection.findOne(query);
-        res.send(result);
-      });
+    // GET SINGLE PATH //
+    app.get("/path/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await pathCollection.findOne(query);
+      res.send(result);
+    });
     // GET STORY //
     app.get("/all-story", async (req, res) => {
       try {
@@ -91,30 +91,56 @@ async function run() {
     });
     // GET SINGLE STORY //
     app.get("/all-story/:id", async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) };
-        const result = await postStoryCollection.findOne(query);
-        res.send(result);
-      });
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await postStoryCollection.findOne(query);
+      res.send(result);
+    });
     //   UPDATE STORY //
     app.put("/all-story/:id", async (req, res) => {
-        const id = req.params.id;
-        const updatedId = { _id: new ObjectId(id) };
-        const options = { upsert: true };
-        const updateBlog = req.body;
-        const updateMyBlog = {
-          $set: {
-            title: updateBlog.title,
-            storyDescription: updateBlog.storyDescription,
-          },
-        };
-        const result = await postStoryCollection.updateOne(
+      const id = req.params.id;
+      const updatedId = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateBlog = req.body;
+      const updateMyBlog = {
+        $set: {
+          title: updateBlog.title,
+          storyDescription: updateBlog.storyDescription,
+        },
+      };
+      const result = await postStoryCollection.updateOne(
+        updatedId,
+        updateMyBlog,
+        options
+      );
+      res.send(result);
+    });
+    //   UPDATE PATH //
+    app.put("/path/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedId = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateBlog = req.body;
+      console.log(updateBlog);
+      const updateMyBlog = {
+        $set: {
+          title: updateBlog.title,
+          initialContent: updateBlog.initialContent,
+          options: updateBlog.options,
+        },
+      };
+      try {
+        const result = await pathCollection.updateOne(
           updatedId,
           updateMyBlog,
           options
         );
         res.send(result);
-      });
+      } catch (error) {
+        console.error("Error updating path:", error);
+        res.status(500).send("Error updating path");
+      }
+    });
     // GET STORY DETAILS //
     app.get("/story-details/:id", async (req, res) => {
       try {
