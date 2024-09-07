@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 const port = process.env.PORT || 5001;
 
@@ -53,33 +53,33 @@ async function run() {
       }
     });
     app.post("/add-path", async (req, res) => {
-        const { title, initialContent, options, postedTime, email } = req.body;
-        const parentId = options.length > 0 ? uuidv4() : ""; 
-        const optionTitles = options.map(option => option.title);
-      
-        try {
-          const result = await pathCollection.insertOne({
-            title,
-            initialContent,
-            options: options.map(option => ({ ...option, parentId })),
-            postedTime,
-            parentId,
-            email,
-          });
-      
-          if (parentId) {
-            await pathCollection.updateMany(
-              { title: { $in: optionTitles } },
-              { $set: { parentId } }
-            );
-          }
-      
-          res.json({ success: true, insertedId: result.insertedId });
-        } catch (error) {
-          res.status(500).json({ success: false, error: error.message });
+      const { title, initialContent, options, postedTime, email } = req.body;
+      const parentId = options.length > 0 ? uuidv4() : "";
+      const optionTitles = options.map((option) => option.title);
+
+      try {
+        const result = await pathCollection.insertOne({
+          title,
+          initialContent,
+          options: options.map((option) => ({ ...option, parentId })),
+          postedTime,
+          parentId,
+          email,
+        });
+
+        if (parentId) {
+          await pathCollection.updateMany(
+            { title: { $in: optionTitles } },
+            { $set: { parentId } }
+          );
         }
-      });
-      
+
+        res.json({ success: true, insertedId: result.insertedId });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
     // GET PATH //
     app.get("/get-path", async (req, res) => {
       try {
@@ -127,7 +127,7 @@ async function run() {
     });
 
     app.put("/update-allpath", async (req, res) => {
-      const { titles, parentId } = req.body; 
+      const { titles, parentId } = req.body;
 
       try {
         const result = await pathCollection.updateMany(
@@ -274,17 +274,72 @@ async function run() {
       }
     });
     // DELETE PATH //
+ 
+
     app.delete("/path/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      try {
-        const result = await pathCollection.deleteOne(query);
-        res.send(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        res.status(500).send({ message: "Failed to fetch data" });
-      }
-    });
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+      
+        try {
+          const pathToDelete = await pathCollection.findOne(query);
+      
+          if (!pathToDelete) {
+            return res
+              .status(404)
+              .json({ success: false, message: "Path not found" });
+          }
+      
+          const { parentId } = pathToDelete;
+      
+          const deleteResult = await pathCollection.deleteOne(query);
+      
+          if (parentId) {
+            const updateResult = await pathCollection.updateMany(
+              { parentId },
+              { $set: { parentId: "" } }
+            );
+      
+            console.log("Update result:", updateResult);
+          }
+      
+          if (deleteResult.deletedCount > 0) {
+            res.json({ success: true, message: "Path deleted successfully" });
+          } else {
+            res.json({ success: false, message: "Failed to delete path" });
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          res.status(500).json({ success: false, error: error.message });
+        }
+      });
+      
+
+      app.patch("/update-paths-parent-id", async (req, res) => {
+        const { parentId, newParentId } = req.body;
+      
+        try {
+          const result = await pathCollection.updateMany(
+            { parentId },
+            { $set: { parentId: newParentId } }
+          );
+      
+          if (result.modifiedCount > 0) {
+            res.json({
+              success: true,
+              message: "Parent IDs updated successfully",
+            });
+          } else {
+            res.json({
+              success: false,
+              message: "No matching paths found to update",
+            });
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          res.status(500).json({ success: false, error: error.message });
+        }
+      });
+      
 
     await client.db("admin").command({ ping: 1 });
     console.log(
