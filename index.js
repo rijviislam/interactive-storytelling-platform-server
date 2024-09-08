@@ -265,22 +265,44 @@ async function run() {
       }
     });
 
-    // VIEW COUNT //
+    // STORY VIEW COUNT
     app.patch("/story-viewcount/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(
-        "Received request to update view count for ID:",
-        req.params.id
-      );
+      console.log("Received request to update view count for ID:", id);
       try {
         const query = { _id: new ObjectId(id) };
         const update = { $inc: { viewCount: 1 } };
-        const result = await postStoryCollection.updateOne(query,update);
+        const result = await postStoryCollection.updateOne(query, update);
+
         if (result.matchedCount === 0) {
-            res.status(404).send({ message: "Story not found" });
-            return;
-          }
-          res.send({ message: "View count updated successfully" });
+          res.status(404).send({ message: "Story not found" });
+          return;
+        }
+
+        console.log("View count updated successfully.");
+        res.send({ message: "View count updated successfully" });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ message: "Failed to fetch data" });
+      }
+    });
+      
+    //   PATH VIEW COUNT //
+    app.patch("/option-viewcount/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("Received request to update view count for Option ID:", id);
+      try {
+        const query = { _id: new ObjectId(id) }; // Assuming the option has a similar ID structure
+        const update = { $inc: { viewCount: 1 } };
+        const result = await pathCollection.updateOne(query, update);
+
+        if (result.matchedCount === 0) {
+          res.status(404).send({ message: "Option not found" });
+          return;
+        }
+
+        console.log("Option view count updated successfully.");
+        res.send({ message: "Option view count updated successfully" });
       } catch (error) {
         console.error("Error fetching data:", error);
         res.status(500).send({ message: "Failed to fetch data" });
@@ -333,7 +355,7 @@ async function run() {
         res.status(500).json({ success: false, error: error.message });
       }
     });
-
+// UPDATE PATH PARENT ID  //
     app.patch("/update-paths-parent-id", async (req, res) => {
       const { parentId, newParentId } = req.body;
 
