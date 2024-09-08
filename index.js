@@ -10,6 +10,8 @@ const corsOptions = {
     "http://localhost:5001",
     "http://localhost:5173",
     "http://localhost:5174",
+    "https://interactive-storytelling-platform-server.vercel.app",
+    "https://interactive-storytelling-7893f.web.app"
   ],
 };
 // MIDDLE-WARE //
