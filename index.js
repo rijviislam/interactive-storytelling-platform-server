@@ -265,6 +265,28 @@ async function run() {
       }
     });
 
+    // VIEW COUNT //
+    app.patch("/story-viewcount/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(
+        "Received request to update view count for ID:",
+        req.params.id
+      );
+      try {
+        const query = { _id: new ObjectId(id) };
+        const update = { $inc: { viewCount: 1 } };
+        const result = await postStoryCollection.updateOne(query,update);
+        if (result.matchedCount === 0) {
+            res.status(404).send({ message: "Story not found" });
+            return;
+          }
+          res.send({ message: "View count updated successfully" });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        res.status(500).send({ message: "Failed to fetch data" });
+      }
+    });
+
     app.get("/my-story/:email", async (req, res) => {
       const myEmail = req.params.email.trim();
       try {
