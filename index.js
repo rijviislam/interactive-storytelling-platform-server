@@ -10,8 +10,6 @@ const corsOptions = {
     "http://localhost:5001",
     "http://localhost:5173",
     "http://localhost:5174",
-    "https://interactive-storytelling-platform-server.vercel.app",
-    "https://interactive-storytelling-7893f.web.app"
   ],
 };
 // MIDDLE-WARE //
@@ -58,6 +56,7 @@ async function run() {
     app.post("/add-path", async (req, res) => {
       const { title, initialContent, options, postedTime, email,image, viewCount } =
         req.body;
+        console.log(req.body)
       const parentId = options.length > 0 ? uuidv4() : "";
       const optionTitles = options.map((option) => option.title);
 
@@ -85,8 +84,6 @@ async function run() {
         res.status(500).json({ success: false, error: error.message });
       }
     });
-
-
 
     // GET PATH //
     app.get("/get-path", async (req, res) => {
