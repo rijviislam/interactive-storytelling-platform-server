@@ -55,7 +55,7 @@ async function run() {
       }
     });
     app.post("/add-path", async (req, res) => {
-      const { title, initialContent, options, postedTime, email, viewCount } =
+      const { title, initialContent, options, postedTime, email,image, viewCount } =
         req.body;
       const parentId = options.length > 0 ? uuidv4() : "";
       const optionTitles = options.map((option) => option.title);
@@ -64,6 +64,7 @@ async function run() {
         const result = await pathCollection.insertOne({
           title,
           initialContent,
+          image,
           options: options.map((option) => ({ ...option, parentId })),
           postedTime,
           parentId,
