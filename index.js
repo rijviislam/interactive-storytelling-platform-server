@@ -53,7 +53,8 @@ async function run() {
       }
     });
     app.post("/add-path", async (req, res) => {
-      const { title, initialContent, options, postedTime, email } = req.body;
+      const { title, initialContent, options, postedTime, email, viewCount } =
+        req.body;
       const parentId = options.length > 0 ? uuidv4() : "";
       const optionTitles = options.map((option) => option.title);
 
@@ -65,6 +66,7 @@ async function run() {
           postedTime,
           parentId,
           email,
+          viewCount,
         });
 
         if (parentId) {
@@ -262,6 +264,7 @@ async function run() {
         res.status(500).send({ message: "Failed to fetch data" });
       }
     });
+
     app.get("/my-story/:email", async (req, res) => {
       const myEmail = req.params.email.trim();
       try {
@@ -274,72 +277,66 @@ async function run() {
       }
     });
     // DELETE PATH //
- 
-
     app.delete("/path/:id", async (req, res) => {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) };
-      
-        try {
-          const pathToDelete = await pathCollection.findOne(query);
-      
-          if (!pathToDelete) {
-            return res
-              .status(404)
-              .json({ success: false, message: "Path not found" });
-          }
-      
-          const { parentId } = pathToDelete;
-      
-          const deleteResult = await pathCollection.deleteOne(query);
-      
-          if (parentId) {
-            const updateResult = await pathCollection.updateMany(
-              { parentId },
-              { $set: { parentId: "" } }
-            );
-      
-            console.log("Update result:", updateResult);
-          }
-      
-          if (deleteResult.deletedCount > 0) {
-            res.json({ success: true, message: "Path deleted successfully" });
-          } else {
-            res.json({ success: false, message: "Failed to delete path" });
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          res.status(500).json({ success: false, error: error.message });
-        }
-      });
-      
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
 
-      app.patch("/update-paths-parent-id", async (req, res) => {
-        const { parentId, newParentId } = req.body;
-      
-        try {
-          const result = await pathCollection.updateMany(
-            { parentId },
-            { $set: { parentId: newParentId } }
-          );
-      
-          if (result.modifiedCount > 0) {
-            res.json({
-              success: true,
-              message: "Parent IDs updated successfully",
-            });
-          } else {
-            res.json({
-              success: false,
-              message: "No matching paths found to update",
-            });
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          res.status(500).json({ success: false, error: error.message });
+      try {
+        const pathToDelete = await pathCollection.findOne(query);
+
+        if (!pathToDelete) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Path not found" });
         }
-      });
-      
+
+        const { parentId } = pathToDelete;
+
+        const deleteResult = await pathCollection.deleteOne(query);
+
+        if (parentId) {
+          const updateResult = await pathCollection.updateMany(
+            { parentId },
+            { $set: { parentId: "" } }
+          );
+        }
+
+        if (deleteResult.deletedCount > 0) {
+          res.json({ success: true, message: "Path deleted successfully" });
+        } else {
+          res.json({ success: false, message: "Failed to delete path" });
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.patch("/update-paths-parent-id", async (req, res) => {
+      const { parentId, newParentId } = req.body;
+
+      try {
+        const result = await pathCollection.updateMany(
+          { parentId },
+          { $set: { parentId: newParentId } }
+        );
+
+        if (result.modifiedCount > 0) {
+          res.json({
+            success: true,
+            message: "Parent IDs updated successfully",
+          });
+        } else {
+          res.json({
+            success: false,
+            message: "No matching paths found to update",
+          });
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
