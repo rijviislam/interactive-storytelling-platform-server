@@ -54,6 +54,7 @@ async function run() {
         res.status(500).send({ message: "Failed to Post data" });
       }
     });
+    // POST PATH //
     app.post("/add-path", async (req, res) => {
       const { title, initialContent, options, postedTime, email,image, viewCount } =
         req.body;
@@ -84,6 +85,8 @@ async function run() {
         res.status(500).json({ success: false, error: error.message });
       }
     });
+
+
 
     // GET PATH //
     app.get("/get-path", async (req, res) => {
